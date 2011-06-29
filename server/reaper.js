@@ -139,7 +139,7 @@ Reaper.prototype = {
         };
         
         var finalize = function(key, item) {
-            return {"k": item.k, "m10": item.m10, "m90": item.m90, "count": item.count, "avg": Math.round(item.v / item.count), "ts": item.ts} ;
+            return {"k": item.k, "m10": item.m10, "m90": item.m90, "count": item.count, "avg": Math.round(item.avg / item.count), "ts": item.ts} ;
         }
 
         var now = myutil.getUTCTimestamp();
