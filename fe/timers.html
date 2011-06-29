@@ -1,0 +1,114 @@
+
+<head>
+<title>Test</title>
+</head>
+<body>
+<h3>Showing graphs for key: <span id="key"></span></h3>
+<div id="graph-ag_office_aol_com" style="width:800px;height:200px"></div>
+<select id="props">
+</select>
+<button name="refresh">Refresh keys</button>
+<button name="stop">Stop</button>
+<script type="text/javascript" src="http://o.aolcdn.com/os/aol/jquery-1.5.2.min.js"></script>
+<script type="text/javascript" src="./flot/jquery.flot.js"></script>
+<script type="text/javascript">
+var loopTimer;
+var UTC_OFFSET = new Date().getTimezoneOffset() * 60 * 1000 ;
+
+function getData(key) {
+    var now = new Date().getTime() - UTC_OFFSET;
+    var data = [];
+    $.ajax({
+        url: "http://localhost:20000/times",
+        /*data: {'ts': now, "host": ["host1", "host2"], "key": key || "t.1", "dur": 300},*/
+        data: {'ts': now, "host": ["ag.office.aol.com"], "key": key || "t.1", "dur": 300},
+        traditional: true,
+        dataType: 'jsonp',
+        jsonpCallback: 'data'
+    });
+}
+
+function data(d) {
+    var p = [], max = [], min = []; 
+    for (h in d) {
+        var dd = d[h];
+        for (var i = 0; i < dd.length; i++) {
+            var dt = new Date(Number(dd[i].ts));
+            p.push([dt, dd[i].avg]);
+            max.push([dt, dd[i].max90thp]);
+            min.push([dt, dd[i].min10thp]);
+        }
+        console.log(p);
+        var dataset = [
+            {"label": "avg", "data": p}
+            /*
+            ,{"label": "max", "data": max, "lines": {"show": true, "fill": false}}
+            ,{"label": "min", "data": min, "lines": {"show": true, "fill": false}}
+            */
+        ];
+        console.log(h);
+        var grph = $('#graph-' + (h.replace(/\./g,"_")));
+        console.log(grph);
+        $.plot(grph, dataset, { 
+           series: { 
+               points: {show: true}, 
+               lines: {show: true}
+           }, 
+           xaxis: {
+               'mode':'time',
+               'twelveHourClock': true
+           }
+        });
+        p = [];
+        max = [];
+        min = [];
+    }
+}
+
+
+function init(key) {
+    $('#key').html(key || "t.1");
+    if (loopTimer) clearInterval(loopTimer);
+    getData(key);
+    loopTimer = setInterval(function() {
+        getData(key)
+    }, 10000);
+}
+
+$('button[name=stop]').click(function(e) {
+    e.preventDefault();
+    if (loopTimer) clearInterval(loopTimer);
+});
+
+$('button[name=refresh]').click(function(e) {
+    e.preventDefault();
+    refreshKeys();
+});
+
+$('#props').change(function(e) {
+    e.preventDefault();
+    init($(e.target).find(':selected:').val());
+});
+
+function refreshKeys() {
+    $.ajax({
+        url: "http://localhost:20000/keys",
+        data: {"type": "t"},
+        dataType: 'jsonp',
+        jsonpCallback: 'keys'
+    });
+}
+
+function keys(d) {
+    var s = "";
+    for (var i = 0; i < d.length; i++) {
+        s += "<option val='" + d[i] + "'>" + d[i] + "</option>";
+    }
+    $('#props').html(s);
+}
+
+refreshKeys();
+init("api.call.time");
+</script>
+</body>
+</html>

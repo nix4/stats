@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Test</title>
+</head>
+<body>
+<div id="placeholder" style="width:600px;height:300px">
+</div>
+<div id="max"></div>
+<script type="text/javascript" src="http://o.aolcdn.com/os/aol/jquery-1.5.2.min.js"></script>
+<script type="text/javascript">
+function getData() {
+    var now = new Date().getTime();
+    var d;
+    $.ajax({
+        url: "http://localhost:20000",
+        data: {'ts': now},
+        dataType: 'jsonp',
+        async: true,
+        jsonpCallback: 'cb',
+        
+        success: function(data) {
+            //try {
+            //console.log(d);
+            //}catch(e) {
+            //}
+            return d;
+        },
+       
+        error: function(xhr, err, errT) {
+        }
+    });
+
+}
+function cb(data) {
+    d = data;
+}
+
+console.log(getData());
+</script>
+</body>
+</html>
