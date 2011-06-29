@@ -1,0 +1,1 @@
+This is a simple statistics collection and reporting server I hacked up with node.js and mongodb. It's heavily influenced by the StatsD project by Etsy (https://github.com/etsy/statsd). I decided to code this since I wanted a backend that I could control better (MongoDB vs Graphite). Feel free to fork and hack away.
