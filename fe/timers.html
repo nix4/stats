@@ -4,24 +4,28 @@
 </head>
 <body>
 <h3>Showing graphs for key: <span id="key"></span></h3>
-<div id="graph-ag_office_aol_com" style="width:800px;height:200px"></div>
+<div id="graphs">
+</div>
 <select id="props">
 </select>
 <button name="refresh">Refresh keys</button>
+<div id="hosts">
+</div>
+<button name="refresh-hosts">Refresh Hosts</button>
 <button name="stop">Stop</button>
-<script type="text/javascript" src="http://o.aolcdn.com/os/aol/jquery-1.5.2.min.js"></script>
-<script type="text/javascript" src="./flot/jquery.flot.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+<script type="text/javascript" src="js/flot/jquery.flot.js"></script>
 <script type="text/javascript">
 var loopTimer;
 var UTC_OFFSET = new Date().getTimezoneOffset() * 60 * 1000 ;
+var allHosts = [], allKeys = [], thisKey;
 
-function getData(key) {
+function getData(key, h) {
     var now = new Date().getTime() - UTC_OFFSET;
     var data = [];
     $.ajax({
         url: "http://localhost:20000/times",
-        /*data: {'ts': now, "host": ["host1", "host2"], "key": key || "t.1", "dur": 300},*/
-        data: {'ts': now, "host": ["ag.office.aol.com"], "key": key || "t.1", "dur": 300},
+        data: {'ts': now, "host": h, "key": key || "t.1", "dur": (6 * 60 * 60)},
         traditional: true,
         dataType: 'jsonp',
         jsonpCallback: 'data'
@@ -38,7 +42,7 @@ function data(d) {
             max.push([dt, dd[i].max90thp]);
             min.push([dt, dd[i].min10thp]);
         }
-        console.log(p);
+//        console.log(p);
         var dataset = [
             {"label": "avg", "data": p}
             /*
@@ -46,7 +50,7 @@ function data(d) {
             ,{"label": "min", "data": min, "lines": {"show": true, "fill": false}}
             */
         ];
-        console.log(h);
+//        console.log(h);
         var grph = $('#graph-' + (h.replace(/\./g,"_")));
         console.log(grph);
         $.plot(grph, dataset, { 
@@ -60,35 +64,45 @@ function data(d) {
            }
         });
         p = [];
-        max = [];
         min = [];
     }
 }
 
-
-function init(key) {
-    $('#key').html(key || "t.1");
-    if (loopTimer) clearInterval(loopTimer);
-    getData(key);
-    loopTimer = setInterval(function() {
-        getData(key)
-    }, 10000);
+function fetchHosts() {
+    $.ajax({
+        url: "http://localhost:20000/hosts",
+        dataType: "jsonp",
+        jsonpCallback: "hosts" 
+    });
 }
 
-$('button[name=stop]').click(function(e) {
-    e.preventDefault();
+function hosts(d) {
+    allHosts = d;
+    var s = "";
+    for (var i = 0; i < d.length; i++) {
+        s += '<input type="checkbox" value="' + d[i] + '" checked>' + d[i] + '</input>'; 
+    }
+    $('#hosts').html(s);
+}
+
+
+function init(key) {
+    console.log('init called');
+    $('#key').html(key || "t.1");
     if (loopTimer) clearInterval(loopTimer);
-});
-
-$('button[name=refresh]').click(function(e) {
-    e.preventDefault();
-    refreshKeys();
-});
-
-$('#props').change(function(e) {
-    e.preventDefault();
-    init($(e.target).find(':selected:').val());
-});
+    var s = "";
+    for (var i = 0 ; i < allHosts.length; i++) {
+        s += '<div class="graph">';
+        s += '<div class="graph-label">' + allHosts[i] + '</div>';
+        s += '<div id="graph-' + allHosts[i] + '" style="width:900px;height:200px"></div>';
+        s += '</div>';
+    }
+    $('#graphs').html(s);
+    getData(key, allHosts);
+    loopTimer = setInterval(function() {
+        getData(key, allHosts)
+    }, 10000);
+}
 
 function refreshKeys() {
     $.ajax({
@@ -100,6 +114,7 @@ function refreshKeys() {
 }
 
 function keys(d) {
+    allKeys = d;
     var s = "";
     for (var i = 0; i < d.length; i++) {
         s += "<option val='" + d[i] + "'>" + d[i] + "</option>";
@@ -107,8 +122,49 @@ function keys(d) {
     $('#props').html(s);
 }
 
-refreshKeys();
-init("api.call.time");
+function initOnce() {
+    $('button[name=stop]').click(function(e) {
+        e.preventDefault();
+        if (loopTimer) clearInterval(loopTimer);
+    });
+    
+    $('button[name=refresh]').click(function(e) {
+        e.preventDefault();
+        refreshKeys();
+    });
+    
+    $('#props').change(function(e) {
+        e.preventDefault();
+        init($(e.target).find(':selected:').val());
+    });
+
+    $('button[name=refresh-hosts]').click(function(e) {
+        e.preventDefault();
+        fetchHosts();
+    });
+
+    $('#hosts input').live('change', function(e) {
+        e.preventDefault();
+        var s = [];
+        $('#hosts input:checked').each(function(d, item) {
+            s.push(item.value);
+        });
+        allHosts = s;
+        init(thisKey);
+    });
+
+    fetchHosts();
+    refreshKeys();
+    var initializer = setInterval(function() {
+        console.log(allHosts);
+        console.log(allKeys);
+        if (allHosts.length && allKeys.length) {
+            clearInterval(initializer);
+            init(allKeys[0]);
+        } 
+    }, 1000);
+}
+initOnce();
 </script>
 </body>
 </html>

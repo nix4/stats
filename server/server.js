@@ -143,5 +143,5 @@ stats.init();
 
 stats.start(function() {
     console.log("Server started. Listening on port 10000");
-    stats.killAfterDelay(120);
+   // stats.killAfterDelay(120);
 });
