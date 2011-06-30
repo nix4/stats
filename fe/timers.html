@@ -1,4 +1,4 @@
-
+<html>
 <head>
 <title>Test</title>
 </head>
@@ -19,12 +19,13 @@
 var loopTimer;
 var UTC_OFFSET = new Date().getTimezoneOffset() * 60 * 1000 ;
 var allHosts = [], allKeys = [], thisKey;
+var statsHost = "http://localhost:20000";
 
 function getData(key, h) {
     var now = new Date().getTime() - UTC_OFFSET;
     var data = [];
     $.ajax({
-        url: "http://localhost:20000/times",
+        url: statsHost + "/times",
         data: {'ts': now, "host": h, "key": key || "t.1", "dur": (6 * 60 * 60)},
         traditional: true,
         dataType: 'jsonp',
@@ -70,7 +71,7 @@ function data(d) {
 
 function fetchHosts() {
     $.ajax({
-        url: "http://localhost:20000/hosts",
+        url: statsHost + "/hosts",
         dataType: "jsonp",
         jsonpCallback: "hosts" 
     });
@@ -106,7 +107,7 @@ function init(key) {
 
 function refreshKeys() {
     $.ajax({
-        url: "http://localhost:20000/keys",
+        url: statsHost + "/keys",
         data: {"type": "t"},
         dataType: 'jsonp',
         jsonpCallback: 'keys'
