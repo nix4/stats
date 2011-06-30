@@ -89,8 +89,8 @@ Reaper.prototype = {
                 cursor.each(function(err, item) {
                     if (err) console.log("error iterating over cursor " + utils.inspect(err));
                     if (item) {
-                        item._id = item.value.ts + '_' + item.value.k;
-                        self.medium.insert(item)
+                        item.value._id = item.value.ts + '_' + item.value.k;
+                        self.medium.insert(item.value)
                     } else {
                         self.raw.update(_.extend(query, {"m_m":0, "ts": {$lt: nowMin}}), {$set: {"m_m":1}}, {upsert:false, multi:true});
                         self.ct.emit('cursorFinished');
@@ -103,8 +103,8 @@ Reaper.prototype = {
             mrCollection.find({}, function(err, cursor) {
                 cursor.each(function(err, item) {
                     if (item) {
-                        item._id = item.value.ts + '_' + item.value.k;
-                        self.longterm.insert(item);
+                        item.value._id = item.value.ts + '_' + item.value.k;
+                        self.longterm.insert(item.value);
                     } else {
                         self.raw.update(_.extend(query, {"m_h":0, "ts": {$lt: nowHr}}), {$set: {"m_h":1}}, {upsert:false, multi:true});
                         self.ct.emit('cursorFinished');
@@ -156,8 +156,8 @@ Reaper.prototype = {
                 cursor.each(function(err, item) {
                     if (err) console.log("error iterating over cursor " + utils.inspect(err));
                     if (item) {
-                        item._id = item.value.ts + '_' + item.value.k;
-                        self.medium.insert(item)
+                        item.value._id = item.value.ts + '_' + item.value.k;
+                        self.medium.insert(item.value)
                     } else {
                         self.raw.update(_.extend(query, {"m_m":0, "ts": {$lt: nowMin}}), {$set: {"m_m":1}}, {upsert:false, multi:true});
                         self.ct.emit('cursorFinished');
@@ -170,8 +170,8 @@ Reaper.prototype = {
             mrCollection.find({}, function(err, cursor) {
                 cursor.each(function(err, item) {
                     if (item) {
-                        item._id = item.value.ts + '_' + item.value.k;
-                        self.longterm.insert(item);
+                        item.value._id = item.value.ts + '_' + item.value.k;
+                        self.longterm.insert(item.value);
                     } else {
                         self.raw.update(_.extend(query, {"m_h":0, "ts": {$lt: nowHr}}), {$set: {"m_h":1}}, {upsert:false, multi:true});
                         self.ct.emit('cursorFinished');
