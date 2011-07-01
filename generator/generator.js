@@ -23,5 +23,9 @@ setInterval(function() {
     sock.send(buf, 0, buf.length, 10000, "localhost");
     buf = new Buffer("t.2|" + hosts[(fl(rnd() * 10) % 3)] + "|" + fl(rnd() * 1000) + "|t");
     sock.send(buf, 0, buf.length, 10000, "localhost");
+    buf = new Buffer("x.y.z|" + hosts[(fl(rnd() * 10) % 3)] + "|" + fl(rnd() * 10) + "|m");
+    sock.send(buf, 0, buf.length, 10000, "localhost");
+    buf = new Buffer("m.n.o|" + hosts[(fl(rnd() * 10) % 3)] + "|" + fl(rnd() * 50) + "|m");
+    sock.send(buf, 0, buf.length, 10000, "localhost");
     sock.close();
 }, 100)

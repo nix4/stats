@@ -13,6 +13,8 @@ StatsServer.prototype = {
         //this.writeInterval = 1 * 1000; //1 second
         this.counters = [];
         this.timers = [];
+        this.meters = [];
+        this.startTime = new Date();
         this.mongo.open(function(err, db) {
             db.collection('raw', function(err, collection) {
                 self.coll = collection;
@@ -32,6 +34,7 @@ StatsServer.prototype = {
         
         var counters = this.counters;
         var timers = this.timers;
+        var meters = this.meters;
         var writer = setInterval(function() {
             var ts = myutil.getUTCTimestamp();
             var records = [];
@@ -46,7 +49,6 @@ StatsServer.prototype = {
                         "v": val,
                         "t": "c",
                         "ts": ts,
-                        "dt": new Date(ts)
                     });
                     counters[host][key] = 0;
                 }
@@ -90,6 +92,17 @@ StatsServer.prototype = {
             }
             self.coll.insertAll(records);
             records = [];
+            
+            for (host in meters) {
+                for (key in meters[host]) {
+                    var val = meters[host][key];
+                    self.coll.update({"_id": host + "_" + key + "_m", "h": host, "k":key, "t":"m"}, {$inc : {"v": val}}, {upsert:true, multi:false}, function(err, doc) {
+                        meters[host][key] = 0;
+                    });
+                }
+            }
+            
+
         }, this.writeInterval);
 
         this.server.bind(10000);
@@ -109,6 +122,7 @@ StatsServer.prototype = {
             s = parts[4] || 1;
         var counters = this.counters;
         var timers = this.timers;
+        var meters = this.meters;
         var self = this;
         if (type === "c") {
             if (!counters[host]) {
@@ -126,6 +140,14 @@ StatsServer.prototype = {
                 timers[host][key] = [];
             }
             timers[host][key].push(Number(val || 0));
+        } else if (type === 'm') {
+            if (!meters[host]) {
+                meters[host] = [];
+            }
+            if (!meters[host][key]) {
+                meters[host][key] = 0;
+            }
+            meters[host][key] += Number(val || 1) * (1 / s);
         }
     }, 
 
