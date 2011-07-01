@@ -45,11 +45,10 @@ function data(d) {
         }
 //        console.log(p);
         var dataset = [
-            {"label": "avg", "data": p}
-            /*
+            {"label": "avg", "data": p, "lines": {"show": true, "fill": true}}
             ,{"label": "max", "data": max, "lines": {"show": true, "fill": false}}
             ,{"label": "min", "data": min, "lines": {"show": true, "fill": false}}
-            */
+            
         ];
 //        console.log(h);
         var grph = $('#graph-' + (h.replace(/\./g,"_")));
