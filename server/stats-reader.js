@@ -18,7 +18,6 @@ StatsReader.prototype = {
             var q = url.parse(req.url, true),
                 db = self.coll,
                 path = q.pathname;
-            //console.log(path);
 
             if (path === "/counters") {
                 self.reportStats(req, resp);
@@ -65,6 +64,27 @@ StatsReader.prototype = {
     },
     
     reportMeters: function(req, resp) {
+        var q = url.parse(req.url, true),
+            cb = q.query.callback,
+            ret = {};
+        this.coll.find({"t": "m"}, {sort:[["h", 1], ["k", 1]]}, function(err, cursor) {
+            cursor.each(function(err, item) {
+                if (item) {
+                    if (!ret[item.h]) {
+                        ret[item.h] = [];
+                    }
+                    var obj = {};
+                    obj[item.k] = item.v;
+                    ret[item.h].push(obj);
+                } else {
+                    var str = JSON.stringify(ret);
+                    if (cb) str = cb + "(" + str + ")";
+                    resp.writeHead(200, {'Content-Length' : str.length, 'Content-Type': 'application/json'});
+                    resp.write(str);
+                    resp.end();
+                }
+            });
+        });
     },
 
     reportStats: function(req, resp) {
@@ -77,8 +97,10 @@ StatsReader.prototype = {
             key = q.query.key,
             src = q.query.source || "raw",
             db = this.dbs[src];
-        db.find({'ts':{$gt: t - (dur * 1000)}, 'h': {$in: hosts}, 'k':key}, 
-            {fields:['k', 'ts', 'v', 'h'], sort: [["ts",1]], "limit":limit}, 
+        var findQuery = {'ts': {$gt: t - (dur * 1000)}, 'k': key};
+        _.extend(findQuery, {"h":{$in: hosts}});
+        //console.log(findQuery);
+        db.find(findQuery, {fields:['k', 'ts', 'v', 'h'], sort: [["ts",1]], "limit":limit}, */
             function(err, cursor) {
                 var ret = {};
                 for (var h = 0; h < hosts.length; h++) {
@@ -86,9 +108,12 @@ StatsReader.prototype = {
                 }
                 cursor.each(function(err, item) {
                     if (item) {
+                    //console.log(item);
                         ret[item.h].push({"val": item.v || 0, "ts":item.ts, "key":item.k});
                     } else {
+                        //console.log(ret);
                         var str = cb + "(" + JSON.stringify(ret) + ")";
+                        //console.log(str);
                         resp.writeHead(200, {'Content-Length' : str.length, 'Content-Type': 'application/json'});
                         resp.write(str);
                         resp.end();
