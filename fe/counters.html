@@ -13,22 +13,27 @@
 <div id="hosts">
 </div>
 <button name="refresh-hosts">Refresh Hosts</button>
+<select id="source">
+    <option value="raw">Raw Data</option>
+    <option value="medium">Aggregted One minute data</option>
+    <option value="longterm">Aggregated One hour data</option>
+</select>
 <button name="stop">Stop</button>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
 <script type="text/javascript" src="js/flot/jquery.flot.js"></script>
 <script type="text/javascript">
 var loopTimer;
 var UTC_OFFSET = new Date().getTimezoneOffset() * 60 * 1000 ;
-var allHosts = [], allKeys = [], thisKey;
-var statsHost = 'http://localhost:20000";
+var allHosts = [], allKeys = [], thisKey, source = "";
+var statsHost = "http://localhost:20000";
 
 function getData(key, h) {
     var now = new Date().getTime() - UTC_OFFSET;
     var data = [];
     //console.log("hosts : " + h);
     $.ajax({
-        url: statsHost + "/stats",
-        data: {'ts': now, "host": h, "key": key || "a.b", "dur": (6 * 60 * 60)},
+        url: statsHost + "/counters",
+        data: {'ts': now, "host": h, "key": key || "a.b", "dur": (6 * 60 * 60), 'source': source || ""},
         traditional: true,
         async: false, 
         dataType: 'jsonp',
@@ -135,6 +140,11 @@ function initOnce() {
             s.push(item.value);
         });
         allHosts = s;
+        init(thisKey);
+    });
+
+    $('#source').change(function(e) {
+        source = e.target.value;
         init(thisKey);
     });
     

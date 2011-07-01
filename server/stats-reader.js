@@ -20,12 +20,14 @@ StatsReader.prototype = {
                 path = q.pathname;
             //console.log(path);
 
-            if (path === "/stats") {
+            if (path === "/counters") {
                 self.reportStats(req, resp);
             } else if (path === "/keys" || path === '/hosts') {
                 self.reportKeys(req, resp);
-            } else if (path === "/times") {
+            } else if (path === "/timers") {
                 self.reportTimes(req, resp);
+            } else if (path === "/meters") {
+                self.reportMeters(req, resp);
             }
         });
         
@@ -61,6 +63,9 @@ StatsReader.prototype = {
             resp.end();
         });
     },
+    
+    reportMeters: function(req, resp) {
+    },
 
     reportStats: function(req, resp) {
         var q = url.parse(req.url, true),
@@ -72,24 +77,25 @@ StatsReader.prototype = {
             key = q.query.key,
             src = q.query.source || "raw",
             db = this.dbs[src];
-        
-        db.find({'ts':{$gt: t - (dur * 1000)}, 'h': {$in: hosts}, 'k':key}, {fields:['k', 'ts', 'v', 'h'], sort: [["ts",1]], "limit":limit}, function(err, cursor) {
-            var ret = {};
-            for (var h = 0; h < hosts.length; h++) {
-                //console.log(hosts[h]);
-                ret[hosts[h]] = [];
-            }
-            cursor.each(function(err, item) {
-                if (item) {
-                    ret[item.h].push({"val": item.v || 0, "ts":item.ts, "key":item.k});
-                } else {
-                    var str = cb + "(" + JSON.stringify(ret) + ")";
-                    resp.writeHead(200, {'Content-Length' : str.length, 'Content-Type': 'application/json'});
-                    resp.write(str);
-                    resp.end();
+        db.find({'ts':{$gt: t - (dur * 1000)}, 'h': {$in: hosts}, 'k':key}, 
+            {fields:['k', 'ts', 'v', 'h'], sort: [["ts",1]], "limit":limit}, 
+            function(err, cursor) {
+                var ret = {};
+                for (var h = 0; h < hosts.length; h++) {
+                    ret[hosts[h]] = [];
                 }
-            });
-        });
+                cursor.each(function(err, item) {
+                    if (item) {
+                        ret[item.h].push({"val": item.v || 0, "ts":item.ts, "key":item.k});
+                    } else {
+                        var str = cb + "(" + JSON.stringify(ret) + ")";
+                        resp.writeHead(200, {'Content-Length' : str.length, 'Content-Type': 'application/json'});
+                        resp.write(str);
+                        resp.end();
+                    }
+               });
+            }
+        );
     },
 
     reportTimes: function(req, resp) {

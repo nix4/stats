@@ -25,7 +25,7 @@ function getData(key, h) {
     var now = new Date().getTime() - UTC_OFFSET;
     var data = [];
     $.ajax({
-        url: statsHost + "/times",
+        url: statsHost + "/timers",
         data: {'ts': now, "host": h, "key": key || "t.1", "dur": (6 * 60 * 60)},
         traditional: true,
         dataType: 'jsonp',
